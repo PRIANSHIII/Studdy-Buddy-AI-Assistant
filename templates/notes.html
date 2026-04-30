@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes - Study Buddy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1b1b2f;
+            color: #ddd;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #0d0d1a;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.2em;
+            padding: 20px;
+            color: #8e44ad;
+        }
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+            flex: 1;
+        }
+        .nav-item {
+            padding: 12px 20px;
+            color: #ccc;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-item.active {
+            background-color: #2c003e;
+            color: #fff;
+        }
+        .nav-item:hover {
+            background-color: #2c003e;
+            color: #fff;
+        }
+        .content-area {
+            flex: 1;
+            padding: 40px;
+            margin-left: 220px;
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #1b1b2f;
+        }
+        .notes-section {
+            margin-bottom: 40px;
+        }
+        .scrollable-section {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #0d0d1a;
+            margin-top: 10px;
+        }
+        .scrollable-section-large {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #0d0d1a;
+            margin-top: 10px;
+        }
+        .file-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        .file-item-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
+        .btn-secondary, .btn-danger, .btn-download, .submit-button {
+            cursor: pointer;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary {
+            background-color: #8e44ad;
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background-color: #7d3c98;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .btn-download {
+            background-color: #2980b9;
+            color: #fff;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-download:hover {
+            background-color: #2471a3;
+        }
+        .submit-button {
+            background-color: #27ae60;
+            color: #fff;
+            padding: 8px 16px;
+        }
+        .submit-button:hover {
+            background-color: #219653;
+        }
+        .upload-form input[type="file"] {
+            padding: 6px;
+            border-radius: 5px;
+            border: none;
+            background-color: #fff;
+            color: #333;
+        }
+        p {
+            margin: 5px 0;
+        }
+        .flashcards-container {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #0d0d1a;
+            border-radius: 8px;
+        }
+        .flashcard {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            border-radius: 8px;
+            width: 280px;
+            color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+        .flashcard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .flashcard-question {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .flashcard-answer {
+            display: none;
+            color: #f0f0f0;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .flashcard.show-answer .flashcard-answer {
+            display: block;
+        }
+        .flashcard strong { color: #fff; }
+        .loading { color: #888; font-style: italic; }
+        .error { color: #ff5252; background-color: #331a1a; padding: 10px; border-radius: 5px; }
+        .success { color: #27ae60; background-color: #1a331a; padding: 10px; border-radius: 5px; }
+
+        /* Custom Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0d1a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8e44ad;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7d3c98;
+        }
+
+        /* Section headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .section-title {
+            color: #8e44ad;
+            margin: 0;
+        }
+        .scroll-indicator {
+            color: #888;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* File item actions */
+        .file-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+            .sidebar .logo span:last-child,
+            .sidebar .nav-item span:last-child {
+                display: none;
+            }
+            .content-area {
+                margin-left: 60px;
+                padding: 20px;
+            }
+            .file-item-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <a href="{{ url_for('study_buddy') }}" class="logo-link">
+            <div class="logo">
+                <span class="material-icons">school</span>
+                <span>Study Buddy</span>
+            </div>
+        </a>
+
+        <nav class="nav-menu">
+            <a href="{{ url_for('profile') }}" class="nav-item"><span class="material-icons">person</span>Profile</a>
+            <a href="{{ url_for('syllabus') }}" class="nav-item"><span class="material-icons">menu_book</span>Syllabus</a>
+            <a href="{{ url_for('notes') }}" class="nav-item active"><span class="material-icons">note</span>Notes</a>
+            <a href="{{ url_for('progress') }}" class="nav-item"><span class="material-icons">bar_chart</span>Progress</a>
+        </nav>
+
+        <div style="margin-top: auto; padding: 15px;">
+            <p style="font-size: 0.9em;">Logged in as: <strong>{{ session.get('user_name', 'Student') }}</strong></p>
+            <a href="{{ url_for('logout') }}" style="color: #cccccc; text-decoration: none; font-size: 0.9em;">Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content-area">
+        <h1 style="color: #8e44ad; margin-bottom: 20px;">Notes Management</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{% if category == 'error' %}error{% else %}success{% endif %}" style="margin-bottom: 20px;">
+                        <span class="material-icons" style="vertical-align: middle;">
+                            {% if category == 'error' %}error_outline{% else %}check_circle{% endif %}
+                        </span>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Upload Section -->
+        <div class="notes-section">
+            <div class="section-header">
+                <h2 class="section-title">Upload Notes</h2>
+            </div>
+            <form method="POST" action="{{ url_for('notes') }}" enctype="multipart/form-data" class="upload-form">
+                <input type="file" name="notes_file" required>
+                <button type="submit" class="submit-button">
+                    <span class="material-icons" style="font-size: 18px;">upload</span> Upload
+                </button>
+            </form>
+            <p style="font-size: 0.8em; color: #888; margin-top: 10px;">Allowed types: PDF, DOCX, PPT, PPTX, TXT</p>
+        </div>
+
+        <!-- Uploaded Notes -->
+        <div class="notes-section">
+            <div class="section-header">
+                <h2 class="section-title">Your Uploaded Notes</h2>
+                <span class="scroll-indicator">
+                    <span class="material-icons" style="font-size: 16px;">swap_vert</span>
+                    Scrollable
+                </span>
+            </div>
+            <div class="scrollable-section">
+                <ul class="file-list">
+                    {% if uploaded_notes %}
+                        {% for file in uploaded_notes %}
+                            <li class="file-item">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="material-icons" style="color: #8e44ad;">insert_drive_file</span>
+                                    <a href="{{ url_for('uploaded_notes_file', filename=file) }}" target="_blank" style="color: #ddd; text-decoration: none;">{{ file }}</a>
+                                </div>
+
+                                <div class="file-actions">
+                                    <!-- Generate Notes -->
+                                    <form method="POST" action="{{ url_for('generate_notes') }}">
+                                        <input type="hidden" name="filename" value="{{ file }}">
+                                        <button type="submit" class="btn-secondary">
+                                            <span class="material-icons" style="font-size: 18px;">auto_stories</span> Generate Notes
+                                        </button>
+                                    </form>
+
+                                    <!-- Delete -->
+                                    <form method="POST" action="{{ url_for('delete_notes_file') }}">
+                                        <input type="hidden" name="filename" value="{{ file }}">
+                                        <button type="submit" class="btn-danger">
+                                            <span class="material-icons" style="font-size: 18px;">delete</span> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #888; text-align: center; padding: 20px;">No notes uploaded yet. Use the form above to get started!</p>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Generated Notes -->
+        <div class="notes-section">
+            <div class="section-header">
+                <h2 class="section-title">Generated Notes</h2>
+                <span class="scroll-indicator">
+                    <span class="material-icons" style="font-size: 16px;">swap_vert</span>
+                    Scrollable
+                </span>
+            </div>
+            <div class="scrollable-section-large">
+                <ul class="file-list">
+                    {% if generated_notes %}
+                        {% for file in generated_notes %}
+                            <li class="file-item">
+                                <div class="file-item-header">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span class="material-icons" style="color: #8e44ad;">description</span>
+                                        <span style="color: #ddd;">{{ file }}</span>
+                                    </div>
+
+                                    <div class="file-actions">
+                                        <a href="{{ url_for('download_generated_notes', filename=file) }}" class="btn-download">
+                                            <span class="material-icons">download</span> Download
+                                        </a>
+
+                                        <form method="POST" action="{{ url_for('delete_generated_note') }}">
+                                            <input type="hidden" name="filename" value="{{ file }}">
+                                            <button type="submit" class="btn-danger">
+                                                <span class="material-icons" style="font-size: 18px;">delete</span> Delete
+                                            </button>
+                                        </form>
+
+                                        <!-- Dynamic Flashcards Button -->
+                                        <button class="btn-secondary" onclick="generateFlashcards('{{ file }}')" id="flashcard-btn-{{ file }}">
+                                            <span class="material-icons" style="font-size: 18px;">style</span> Generate Flashcards
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Flashcards container -->
+                                <div id="flashcards-{{ file }}" class="flashcards-container"></div>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #888; text-align: center; padding: 20px;">No generated notes yet. Click "Generate Notes" above to create them.</p>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Dynamic Flashcards Script -->
+<script>
+function generateFlashcards(filename) {
+    const containerId = 'flashcards-' + filename;
+    const container = document.getElementById(containerId);
+    const button = document.getElementById('flashcard-btn-' + filename);
+
+    // Show loading state
+    container.innerHTML = '<div class="loading">Generating flashcards... This may take a moment.</div>';
+    button.disabled = true;
+    button.innerHTML = '<span class="material-icons" style="font-size: 18px;">hourglass_empty</span> Generating...';
+
+    console.log('Generating flashcards for:', filename);
+
+    fetch('{{ url_for("generate_flashcards_ajax") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ filename: filename })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Flashcards data received:', data);
+
+        if(data.success && data.flashcards && data.flashcards.length > 0) {
+            container.innerHTML = '<h4 style="color: #8e44ad; margin-bottom: 10px; width: 100%;">Generated Flashcards:</h4>';
+
+            data.flashcards.forEach((card, index) => {
+                const flashcardDiv = document.createElement('div');
+                flashcardDiv.className = 'flashcard';
+                flashcardDiv.innerHTML = `
+                    <div class="flashcard-question">
+                        <strong>Q:</strong> ${card.question || 'No question provided'}
+                    </div>
+                    <div class="flashcard-answer">
+                        <strong>A:</strong> ${card.answer || 'No answer provided'}
+                    </div>
+                    <div style="font-size: 0.8em; color: rgba(255,255,255,0.7); margin-top: 10px;">
+                        Click to reveal answer
+                    </div>
+                `;
+
+                // Add click event to toggle answer visibility
+                flashcardDiv.addEventListener('click', function() {
+                    this.classList.toggle('show-answer');
+                });
+
+                container.appendChild(flashcardDiv);
+            });
+
+            // Add progress tracking
+            fetch('/api/track_progress', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    activity: 'flashcards_generated',
+                    topic: filename
+                })
+            });
+
+        } else {
+            container.innerHTML = `<div class="error">Failed to generate flashcards: ${data.message || 'Unknown error'}</div>`;
+        }
+    })
+    .catch(err => {
+        console.error('Flashcards generation error:', err);
+        container.innerHTML = `<div class="error">Error generating flashcards: ${err.message}</div>`;
+    })
+    .finally(() => {
+        // Reset button state
+        button.disabled = false;
+        button.innerHTML = '<span class="material-icons" style="font-size: 18px;">style</span> Generate Flashcards';
+    });
+}
+
+// Auto-scroll to top when generating flashcards
+function scrollToFlashcards(filename) {
+    const container = document.getElementById('flashcards-' + filename);
+    if (container) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// Enhanced scroll functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth scrolling to all internal links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Add scroll to top button functionality
+    const scrollToTopBtn = document.createElement('button');
+    scrollToTopBtn.innerHTML = '<span class="material-icons">arrow_upward</span>';
+    scrollToTopBtn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #8e44ad;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        z-index: 1000;
+    `;
+
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    document.body.appendChild(scrollToTopBtn);
+
+    // Show/hide scroll to top button
+    window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 300) {
+            scrollToTopBtn.style.display = 'flex';
+        } else {
+            scrollToTopBtn.style.display = 'none';
+        }
+    });
+});
+</script>
+</body>
+</html>

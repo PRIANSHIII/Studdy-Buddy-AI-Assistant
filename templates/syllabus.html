@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllabus - Study Buddy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-container">
+
+    <aside class="sidebar">
+        <!-- Clickable Home Link (Fixed navigation) -->
+        <a href="{{ url_for('study_buddy') }}" class="logo-link">
+            <div class="logo">
+                <span class="material-icons">school</span>
+                <span>Study Buddy</span>
+            </div>
+        </a>
+
+        <nav class="nav-menu">
+            <a href="{{ url_for('profile') }}" class="nav-item"><span class="material-icons">person</span>Profile</a>
+            <a href="{{ url_for('syllabus') }}" class="nav-item active"><span class="material-icons">menu_book</span>Syllabus</a>
+            <a href="#" class="nav-item"><span class="material-icons">person</span>Buddy</a>
+            <a href="#" class="nav-item"><span class="material-icons">book</span>Notes</a>
+
+            <a href="#" class="nav-item"><span class="material-icons">bar_chart</span>Progress</a>
+        </nav>
+
+        <div style="margin-top: auto; padding: 15px;">
+            <p style="font-size: 0.9em;">Logged in as: <strong>{{ session.get('user_name', 'Student') }}</strong></p>
+            <a href="{{ url_for('logout') }}" style="color: #cccccc; text-decoration: none; font-size: 0.9em;">Logout</a>
+        </div>
+    </aside>
+
+    <main class="content-area" style="padding: 40px;">
+        <h1 style="color: var(--primary-color); margin-bottom: 20px;">Syllabus Management</h1>
+
+        {% if error %}
+        <p style="color: #ff5252; background-color: #331a1a; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+            <span class="material-icons" style="vertical-align: middle;">error_outline</span> {{ error }}
+        </p>
+        {% endif %}
+
+        <div class="syllabus-section">
+            <h2>Upload New Syllabus</h2>
+            <form method="POST" action="{{ url_for('syllabus') }}" enctype="multipart/form-data" class="upload-form">
+                <input type="file" name="syllabus_file" required>
+                <button type="submit" class="submit-button">Upload File</button>
+            </form>
+            <p style="font-size: 0.8em; color: #888; margin-top: 10px;">Allowed types: PDF, DOCX, DOC, TXT</p>
+        </div>
+
+        <div class="syllabus-section" style="margin-top: 40px;">
+    <h2>Your Uploaded Syllabi & Study Plans</h2>
+    <ul class="file-list">
+        {% for file in files %}
+            <li class="file-item" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="material-icons" style="color: var(--primary-color);">insert_drive_file</span>
+                    <a href="{{ url_for('uploaded_file', filename=file) }}" target="_blank" style="color: #ddd; text-decoration: none;">
+                        {{ file }}
+                    </a>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    {% if file.startswith('study_plan_for_') %}
+                        <!-- Download button for generated study plans -->
+                        <a href="{{ url_for('uploaded_file', filename=file) }}" download class="btn-secondary" style="display: flex; align-items: center; gap: 5px;">
+                            <span class="material-icons" style="font-size: 18px;">download</span> Download
+                        </a>
+                    {% else %}
+                        <!-- Generate study plan button for syllabus files -->
+                        <form method="POST" action="{{ url_for('generate_study_plan') }}">
+                            <input type="hidden" name="filename" value="{{ file }}">
+                            <button type="submit" class="btn-secondary" style="display: flex; align-items: center; gap: 5px;">
+                                <span class="material-icons" style="font-size: 18px;">auto_stories</span> Generate Plan
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <!-- Delete button -->
+                    <form method="POST" action="{{ url_for('delete_file') }}">
+                        <input type="hidden" name="filename" value="{{ file }}">
+                        <button type="submit" class="btn-danger" style="display: flex; align-items: center; gap: 5px;">
+                            <span class="material-icons" style="font-size: 18px;">delete</span> Delete
+                        </button>
+                    </form>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Study Buddy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <!-- Clickable Home Link -->
+        <a href="{{ url_for('study_buddy') }}" class="logo-link">
+            <div class="logo">
+                <span class="material-icons">school</span>
+                <span>Study Buddy</span>
+            </div>
+        </a>
+
+        <!-- Navigation Menu -->
+        <nav class="nav-menu">
+            <a href="{{ url_for('profile') }}" class="nav-item active">
+                <span class="material-icons">person</span>Profile
+            </a>
+            <a href="{{ url_for('syllabus') }}" class="nav-item">
+                <span class="material-icons">menu_book</span>Syllabus
+            </a>
+            <a href="{{ url_for('study_buddy') }}" class="nav-item">
+                <span class="material-icons">person</span>Buddy
+            </a>
+            <a href="{{ url_for('study_buddy') }}" class="nav-item">
+                <span class="material-icons">notes</span>Notes
+            </a>
+
+            <a href="#" class="nav-item">
+                <span class="material-icons">bar_chart</span>Progress
+            </a>
+        </nav>
+
+        <!-- Footer / Logout -->
+        <div style="margin-top: auto; padding: 15px;">
+            <p style="font-size: 0.9em;">Logged in as: <strong>{{ profile['name'] }}</strong></p>
+            <a href="{{ url_for('logout') }}" style="color: #cccccc; text-decoration: none; font-size: 0.9em;">Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+        <div class="profile-container">
+            <div class="profile-form">
+                <h1>User Profile Settings</h1>
+                <form method="POST" action="{{ url_for('profile') }}">
+                    <!-- Name -->
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" value="{{ profile['name'] }}" required>
+
+                    <!-- Email (Read-only) -->
+                    <label for="email">Gmail/Email:</label>
+                    <input type="email" id="email" name="email" value="{{ profile['email'] }}" disabled>
+
+                    <!-- Age -->
+                    <label for="age">Age:</label>
+                    <input type="number" id="age" name="age" value="{{ profile['age'] }}">
+
+                    <!-- Class / Grade -->
+                    <label for="class">Class/Grade:</label>
+                    <input type="text" id="class" name="class" value="{{ profile['class'] }}">
+
+                    <!-- School / Institution -->
+                    <label for="institution">School/Institution:</label>
+                    <input type="text" id="institution" name="institution" value="{{ profile['institution'] }}">
+
+                    <!-- Save Button -->
+                    <button type="submit" class="submit-button">Save Profile</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+</div>
+</body>
+</html>

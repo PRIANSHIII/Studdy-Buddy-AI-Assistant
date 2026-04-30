@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress - Study Buddy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .app-container {
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .content-area {
+            overflow-y: auto;
+            height: 100vh;
+            padding: 20px 40px;
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: var(--mid-dark);
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 300px;
+        }
+
+        .chart-card canvas {
+            max-height: 250px;
+        }
+
+        .session-list {
+            background: var(--mid-dark);
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .session-item {
+            padding: 15px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .session-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .session-item:last-child {
+            border-bottom: none;
+        }
+
+        .session-activity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .activity-icon {
+            font-size: 18px;
+        }
+
+        .streak-counter {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .streak-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .export-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .scroll-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-to-top:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Custom scrollbar for webkit browsers */
+        .content-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .content-area::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        .session-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .session-list::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+        }
+
+        .session-list::-webkit-scrollbar-thumb {
+            background: #666;
+            border-radius: 3px;
+        }
+
+        .session-list::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .content-area {
+                padding: 15px 20px;
+            }
+
+            .progress-stats {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .stat-number {
+                font-size: 2em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content-area {
+                padding: 10px 15px;
+            }
+
+            .progress-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .session-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <aside class="sidebar">
+        <a href="{{ url_for('study_buddy') }}" class="logo-link">
+            <div class="logo">
+                <span class="material-icons">school</span>
+                <span>Study Buddy</span>
+            </div>
+        </a>
+
+        <nav class="nav-menu">
+            <a href="{{ url_for('profile') }}" class="nav-item"><span class="material-icons">person</span>Profile</a>
+            <a href="{{ url_for('syllabus') }}" class="nav-item"><span class="material-icons">menu_book</span>Syllabus</a>
+            <a href="{{ url_for('study_buddy') }}" class="nav-item"><span class="material-icons">person</span>Buddy</a>
+            <a href="{{ url_for('notes') }}" class="nav-item"><span class="material-icons">note</span>Notes</a>
+            <a href="{{ url_for('progress') }}" class="nav-item active"><span class="material-icons">bar_chart</span>Progress</a>
+        </nav>
+
+        <div style="margin-top: auto; padding: 15px;">
+            <p style="font-size: 0.9em;">Logged in as: <strong>{{ session.get('user_name', 'Student') }}</strong></p>
+            <a href="{{ url_for('logout') }}" style="color: #cccccc; text-decoration: none; font-size: 0.9em;">Logout</a>
+        </div>
+    </aside>
+
+    <main class="content-area" id="contentArea">
+        <h1 style="color: var(--primary-color); margin-bottom: 20px;">Your Study Progress</h1>
+
+        <!-- Study Streak -->
+        <div class="streak-counter">
+            <div class="stat-label">Current Study Streak</div>
+            <div class="streak-number">{{ progress.get('current_streak', 0) }}</div>
+            <div class="stat-label">Days in a Row</div>
+        </div>
+
+        <!-- Export Button -->
+        <button class="export-btn" onclick="exportProgressData()">
+            <span class="material-icons">download</span>
+            Export Progress Data
+        </button>
+
+        <!-- Statistics Cards -->
+        <div class="progress-stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Study Time</div>
+                <div class="stat-number">{{ "%.1f"|format(total_study_time) }}</div>
+                <div class="stat-label">Minutes</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Topics Covered</div>
+                <div class="stat-number">{{ topics_covered }}</div>
+                <div class="stat-label">Topics</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Study Sessions</div>
+                <div class="stat-number">{{ progress.study_sessions|length }}</div>
+                <div class="stat-label">Sessions</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Daily Average</div>
+                <div class="stat-number">{{ "%.1f"|format(daily_average) }}</div>
+                <div class="stat-label">Minutes/Day</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-container">
+            <div class="chart-card">
+                <h3>Study Time Distribution</h3>
+                <canvas id="activityChart" width="400" height="200"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Weekly Progress</h3>
+                <canvas id="weeklyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Sessions -->
+        <h2>Recent Study Sessions</h2>
+        <div class="session-list">
+            {% if progress.study_sessions %}
+                {% for session in progress.study_sessions[-10:]|reverse %}
+                <div class="session-item">
+                    <div class="session-activity">
+                        <span class="material-icons activity-icon">
+                            {% if session.activity == 'study_session' %}school{% endif %}
+                            {% if session.activity == 'chat_interaction' %}chat{% endif %}
+                            {% if session.activity == 'flashcards_studied' %}bookmark{% endif %}
+                            {% if session.activity == 'quiz_taken' %}quiz{% endif %}
+                            {% if session.activity == 'notes_generated' %}note{% endif %}
+                        </span>
+                        <div>
+                            <strong>{{ session.activity|replace('_', ' ')|title }}</strong>
+                            {% if session.topic %}- {{ session.topic }}{% endif %}
+                            <br>
+                            <small style="color: #888;">{{ session.timestamp[:16]|replace('T', ' ') }}</small>
+                        </div>
+                    </div>
+                    <div>
+                        {% if session.duration > 0 %}
+                        <strong>{{ "%.1f"|format(session.duration) }} min</strong>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: #888; text-align: center;">No study sessions recorded yet. Start studying to see your progress!</p>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()">
+        <span class="material-icons">keyboard_arrow_up</span>
+    </button>
+</div>
+
+<script>
+// Study Activity Chart
+const activityCtx = document.getElementById('activityChart').getContext('2d');
+const activityChart = new Chart(activityCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Study Sessions', 'Chat Interactions', 'Flashcards', 'Quizzes'],
+        datasets: [{
+            data: [{{ activity_counts.study_sessions }}, {{ activity_counts.chat_interactions }}, {{ activity_counts.flashcards }}, {{ activity_counts.quizzes }}],
+            backgroundColor: [
+                '#9c27b0',
+                '#2196f3',
+                '#4caf50',
+                '#ff9800'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Weekly Progress Chart
+const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+const weeklyChart = new Chart(weeklyCtx, {
+    type: 'line',
+    data: {
+        labels: {{ weekly_labels|tojson }},
+        datasets: [{
+            label: 'Study Time (minutes)',
+            data: {{ weekly_data|tojson }},
+            borderColor: '#9c27b0',
+            backgroundColor: 'rgba(156, 39, 176, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Scroll to Top Functionality
+const scrollToTopBtn = document.getElementById('scrollToTop');
+const contentArea = document.getElementById('contentArea');
+
+contentArea.addEventListener('scroll', () => {
+    if (contentArea.scrollTop > 300) {
+        scrollToTopBtn.classList.add('show');
+    } else {
+        scrollToTopBtn.classList.remove('show');
+    }
+});
+
+function scrollToTop() {
+    contentArea.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+function exportProgressData() {
+    // Simple export functionality
+    const data = {
+        total_study_time: {{ total_study_time }},
+        topics_covered: {{ topics_covered }},
+        total_sessions: {{ progress.study_sessions|length }},
+        study_sessions: {{ progress.study_sessions|tojson }}
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'study_progress_export.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Initialize charts after page load
+window.addEventListener('load', function() {
+    // Charts are already initialized above
+    console.log('Progress page loaded successfully');
+});
+</script>
+</body>
+</html>

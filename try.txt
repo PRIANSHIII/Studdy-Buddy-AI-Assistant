@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Buddy - AI Assistant</title>
+    <!-- Your updated CSS is linked here -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- Sidebar Menu (Left Navigation) -->
+        <aside class="sidebar">
+
+            <!-- Clickable Home Link (Fixed navigation) -->
+<a href="{{ url_for('study_buddy') }}" class="logo-link">
+    <div class="logo">
+        <span class="material-icons">school</span>
+        <span>Study Buddy</span>
+    </div>
+</a>
+
+
+            <nav class="nav-menu">
+                <a href="{{ url_for('profile') }}" class="nav-item"><span class="material-icons">person</span>Profile</a>
+                <a href="{{ url_for('syllabus') }}" class="nav-item"><span class="material-icons">menu_book</span>Syllabus</a>
+                <a href="{{ url_for('study_buddy') }}" class="nav-item active"><span class="material-icons">person</span>Buddy</a>
+                <a href="{{ url_for('notes') }}" class="nav-item active"><span class="material-icons">note</span>Notes</a>
+                <a href="#" class="nav-item"><span class="material-icons">bookmark</span>Flashcards</a>
+                <a href="#" class="nav-item"><span class="material-icons">quiz</span>Quizzes & Tests</a>
+                <a href="{{ url_for('progress') }}" class="nav-item"><span class="material-icons">bar_chart</span>Progress</a>
+            </nav>
+            <div style="margin-top: auto; padding: 15px;">
+                <p style="font-size: 0.9em;">Logged in as: <strong>{{ user_name }}</strong></p>
+                <a href="{{ url_for('logout') }}" style="color: #cccccc; text-decoration: none; font-size: 0.9em;">Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+
+            <!-- Chat Header -->
+            <div class="chat-header">
+                Chat with Study Buddy
+            </div>
+
+            <!-- Workspace: Buddy Area (Left) and Chat Panel (Right) -->
+            <div class="workspace">
+
+                <!-- Buddy 3D Avatar Area -->
+                <div class="buddy-area">
+                    <div id="buddy-animation">
+                        <!-- Loading Indicator before the model loads -->
+                        <div id="loading-indicator">Loading Buddy...</div>
+                        <!-- The 3D canvas will be injected here by chat.js -->
+                    </div>
+                    <p class="freeform-label">Your Ready Player Me Study Buddy</p>
+                </div>
+
+                <!-- Chat Panel -->
+                <div class="chat-panel">
+
+                    <!-- Chat Window -->
+                    <div class="chat-window" id="chat-window">
+                        <!-- Messages are added by JS -->
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="chat-input-placeholder">
+                        <input type="text" id="chat-input" placeholder="Type a message..." disabled>
+                        <button class="send-button" id="send-button" disabled>
+                            <span class="material-icons">send</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 3D Libraries (CRITICAL for the 3D Avatar) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <!-- Link the chat logic file -->
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>
